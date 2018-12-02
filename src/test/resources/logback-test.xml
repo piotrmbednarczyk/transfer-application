@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+
+    <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+        <layout class="ch.qos.logback.classic.PatternLayout">
+            <Pattern>
+                %d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n
+            </Pattern>
+        </layout>
+    </appender>
+
+    <logger name="com.mkyong.web" level="debug"
+            additivity="false">
+        <appender-ref ref="STDOUT"/>
+    </logger>
+
+    <logger name="io.ebean.docker" level="TRACE"/>
+
+    <logger name="io.ebean.DDL" level="TRACE"/>
+
+    <logger name="io.ebean.SQL" level="TRACE"/>
+    <logger name="io.ebean.TXN" level="TRACE"/>
+    <logger name="io.ebean.SUM" level="TRACE"/>
+
+    <!-- L2 cache logging -->
+    <logger name="io.ebean.cache.QUERY" level="TRACE"/>
+    <logger name="io.ebean.cache.BEAN" level="TRACE"/>
+    <logger name="io.ebean.cache.COLL" level="TRACE"/>
+    <logger name="io.ebean.cache.NATKEY" level="TRACE"/>
+
+    <root level="error">
+        <appender-ref ref="STDOUT"/>
+    </root>
+
+</configuration>
