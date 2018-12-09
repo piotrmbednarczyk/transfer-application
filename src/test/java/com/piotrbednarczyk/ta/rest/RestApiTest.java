@@ -18,6 +18,8 @@ import javax.ws.rs.core.Response;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.List;
 
 import static com.piotrbednarczyk.ta.Main.startServer;
 import static com.piotrbednarczyk.ta.model.Transaction.TransactionType.DEPOSIT;
@@ -60,6 +62,11 @@ public abstract class RestApiTest {
                     }
                 }));
     }
+
+    public List<Transaction> getTransactionsFromResponse(Response response) {
+        return getJsonb().fromJson(response.readEntity(String.class), new ArrayList<Transaction>(){}.getClass().getGenericSuperclass());
+    }
+
 
     public Account createAccountWithTransactions() {
         Account account = new Account();

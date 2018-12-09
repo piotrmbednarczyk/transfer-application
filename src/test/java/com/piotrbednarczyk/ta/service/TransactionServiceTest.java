@@ -46,7 +46,7 @@ public class TransactionServiceTest {
 
     @Test(expected = TransactionException.class)
     public void shouldThrowExceptionOnNonExistentAccount() throws Exception {
-        when(accountService.getAccount(1L)).thenReturn(empty());
+        when(accountService.getAccountForUpdate(1L)).thenReturn(empty());
 
         transactionService.internalTransfer(1l, 2l, BigDecimal.TEN);
     }
@@ -56,7 +56,7 @@ public class TransactionServiceTest {
         Account account = new Account();
         account.setBalance(BigDecimal.valueOf(9L));
 
-        when(accountService.getAccount(1L)).thenReturn(of(account));
+        when(accountService.getAccountForUpdate(1L)).thenReturn(of(account));
 
         transactionService.internalTransfer(1l, 2l, BigDecimal.TEN);
     }
@@ -69,8 +69,8 @@ public class TransactionServiceTest {
         Account toAccount = new Account();
         toAccount.setBalance(BigDecimal.ZERO);
 
-        when(accountService.getAccount(1L)).thenReturn(of(fromAccount));
-        when(accountService.getAccount(2L)).thenReturn(of(toAccount));
+        when(accountService.getAccountForUpdate(1L)).thenReturn(of(fromAccount));
+        when(accountService.getAccountForUpdate(2L)).thenReturn(of(toAccount));
 
         transactionService.internalTransfer(1L, 2L, BigDecimal.TEN);
 

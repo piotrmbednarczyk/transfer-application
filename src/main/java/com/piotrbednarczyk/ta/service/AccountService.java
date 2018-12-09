@@ -41,6 +41,11 @@ public class AccountService {
         return ofNullable(server.find(Account.class).where().idEq(id).findOne());
     }
 
+    public Optional<Account> getAccountForUpdate(long id) {
+        LOG.debug("getAccount {}", id);
+        return ofNullable(server.find(Account.class).forUpdate().where().idEq(id).findOne());
+    }
+
     public void deleteAccount(long id) {
         LOG.debug("deleteAccount {}", id);
         server.delete(Account.class, id);

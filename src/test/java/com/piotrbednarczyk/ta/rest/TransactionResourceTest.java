@@ -132,7 +132,6 @@ public class TransactionResourceTest extends RestApiTest {
         Transaction transaction = getEntityFromResponse(response, Transaction.class);
         account = ebeanServer.find(Account.class, account.getId());
 
-
         assertThat(response.getStatus(), equalTo(OK.getStatusCode()));
         assertThat(transaction.getType(), equalTo(WITHDRAWAL));
         assertThat(transaction.getAmount(), comparesEqualTo(depositAmount));
@@ -163,9 +162,5 @@ public class TransactionResourceTest extends RestApiTest {
         assertThat(transactions, hasSize(2));
         assertThat(fromAccount.getBalance(), comparesEqualTo(ZERO));
         assertThat(toAccount.getBalance(), comparesEqualTo(transferAmount));
-    }
-
-    private List<Transaction> getTransactionsFromResponse(Response response) {
-        return getJsonb().fromJson(response.readEntity(String.class), new ArrayList<Transaction>(){}.getClass().getGenericSuperclass());
     }
 }

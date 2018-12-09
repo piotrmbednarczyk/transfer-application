@@ -42,7 +42,6 @@ public class TransactionResource {
     @POST
     @Consumes(value = APPLICATION_FORM_URLENCODED)
     public Response createWithdrawal(@PathParam("id") Long accountId, @FormParam("amount") BigDecimal amount) {
-        System.out.println("createWithdrawal" + accountId + " " + amount);
         return ok(transactionService.withdrawal(accountId, amount)).build();
     }
 

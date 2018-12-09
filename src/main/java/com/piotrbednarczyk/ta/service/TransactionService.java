@@ -14,7 +14,9 @@ import java.util.List;
 import java.util.Optional;
 
 import static com.google.common.base.Preconditions.checkArgument;
-import static io.ebean.annotation.TxIsolation.REPEATABLE_READ;
+import static com.piotrbednarczyk.ta.model.Transaction.TransactionType.DEPOSIT;
+import static com.piotrbednarczyk.ta.model.Transaction.TransactionType.WITHDRAWAL;
+import static io.ebean.annotation.TxIsolation.SERIALIZABLE;
 import static java.math.RoundingMode.DOWN;
 import static java.text.MessageFormat.format;
 import static java.util.Optional.ofNullable;
@@ -47,7 +49,7 @@ public class TransactionService {
         return ofNullable(server.find(Transaction.class, id));
     }
 
-    @Transactional(isolation = REPEATABLE_READ)
+    @Transactional(isolation = SERIALIZABLE)
     public Transaction deposit(Long accountId, BigDecimal amount) {
         return internalDeposit(accountId, amount);
 
@@ -57,17 +59,17 @@ public class TransactionService {
         LOG.debug("deposit {} to account {}", amount, accountId);
 
         amount = checkAndNormalizeAmount(amount);
-        Account account = getAccount(accountId);
+        Account account = getAccountForUpdate(accountId);
         account.setBalance(account.getBalance().add(amount));
 
-        Transaction transaction = createTransaction(amount, account, Transaction.TransactionType.DEPOSIT);
+        Transaction transaction = createTransaction(amount, account, DEPOSIT);
         account.getTransactions().add(transaction);
         server.save(account);
 
         return transaction;
     }
 
-    @Transactional(isolation = REPEATABLE_READ)
+    @Transactional(isolation = SERIALIZABLE)
     public Transaction withdrawal(Long accountId, BigDecimal amount) {
         return internalWithdrawal(accountId, amount);
     }
@@ -76,9 +78,9 @@ public class TransactionService {
         LOG.debug("withdrawal {} from account {}", amount, accountId);
 
         amount = checkAndNormalizeAmount(amount);
-        Account account = getAccount(accountId);
+        Account account = getAccountForUpdate(accountId);
 
-        if(account.getBalance().compareTo(amount) < 0) {
+        if (account.getBalance().compareTo(amount) < 0) {
             throw new TransactionException(
                     format("Not enough founds on account {0}. Available: ({1})",
                             accountId, account.getBalance()));
@@ -86,24 +88,32 @@ public class TransactionService {
 
         account.setBalance(account.getBalance().subtract(amount));
 
-        Transaction transaction = createTransaction(amount, account, Transaction.TransactionType.WITHDRAWAL);
+        Transaction transaction = createTransaction(amount, account, WITHDRAWAL);
         account.getTransactions().add(transaction);
         server.save(account);
 
         return transaction;
     }
 
-    @Transactional(isolation = REPEATABLE_READ)
+    @Transactional(isolation = SERIALIZABLE)
     public List<Transaction> transfer(Long fromId, Long toId, BigDecimal amount) {
         return internalTransfer(fromId, toId, amount);
      }
 
     protected List<Transaction> internalTransfer(Long fromId, Long toId, BigDecimal amount) {
         LOG.debug("transfer {} from account {} to account {}", amount, fromId, toId);
+        checkArgument(fromId != toId, "source account and destination accounts should be different");
 
         List<Transaction> transactions = new ArrayList<>();
-        transactions.add(internalWithdrawal(fromId, amount));
-        transactions.add(internalDeposit(toId, amount));
+
+        if (fromId < toId) {
+            transactions.add(internalWithdrawal(fromId, amount));
+            transactions.add(internalDeposit(toId, amount));
+        } else {
+            transactions.add(internalDeposit(toId, amount));
+            transactions.add(internalWithdrawal(fromId, amount));
+        }
+
         return transactions;
     }
 
@@ -115,8 +125,8 @@ public class TransactionService {
         return transaction;
     }
 
-    private Account getAccount(Long accountId) {
-        return accountService.getAccount(accountId)
+    private Account getAccountForUpdate(Long accountId) {
+        return accountService.getAccountForUpdate(accountId)
                 .orElseThrow(() -> new TransactionException(
                         format("Account {0} not found", accountId)));
     }
